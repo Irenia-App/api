@@ -49,21 +49,27 @@ const decryptRequest = (body, privateKey) => {
 };
 
 const encryptResponse = (response, aesKey, iv) => {
-    const ivBuffer = Buffer.from(iv, "base64");
-    const cipher = crypto.createCipheriv("aes-128-gcm", aesKey, ivBuffer);
+    try {
+        const ivBuffer = Buffer.from(iv, "base64");
+        const cipher = crypto.createCipheriv("aes-128-gcm", aesKey, ivBuffer);
 
-    // Cifrar el JSON como Buffer
-    const plaintext = JSON.stringify(response);
-    const ciphertext = Buffer.concat([
-        cipher.update(plaintext, "utf8"),
-        cipher.final(),
-    ]);
+        // Convertir el JSON a string UTF-8
+        const plaintext = JSON.stringify(response);
+        
+        // Cifrar directamente
+        const ciphertext = Buffer.concat([
+            cipher.update(plaintext, "utf8"),
+            cipher.final(),
+        ]);
 
-    // Obtener el Tag de 16 bytes
-    const tag = cipher.getAuthTag();
+        // Obtener el Tag (16 bytes)
+        const tag = cipher.getAuthTag();
 
-    // CONCATENAR BINARIO (Cipher + Tag) y luego pasar a Base64
-    return Buffer.concat([ciphertext, tag]).toString("base64");
+        // CONCATENAR: [Ciphertext][Tag] y luego TODO a Base64
+        return Buffer.concat([ciphertext, tag]).toString("base64");
+    } catch (error) {
+        throw new Error("Error en cifrado de respuesta: " + error.message);
+    }
 };
 
 // --- RUTAS ---
